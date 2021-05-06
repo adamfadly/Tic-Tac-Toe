@@ -1,93 +1,140 @@
-const statusDisplay = document.querySelector(".game--status");
+function TicTacToe(placeholder, grid_size, callback) {
+  this.placeholder = placeholder;
+  this.paint(grid_size);
+  this.callback = callback;
+  this.scores = {
+    X: 0,
+    O: 0,
+  };
 
-let gameActive = true;
-let currentPlayer = "X";
-let gameState = ["", "", "", "", "", "", "", "", ""];
+  this.marks = {
+    X: "🐶",
+    O: "🐱",
+    count: 0,
+  };
 
-const winningMessage = () => `Player ${currentPlayer} has won!`;
-const drawMessage = () => `Game ended in a draw!`;
-const currentPlayerTurn = () => `It's ${currentPlayer}'s turn`;
-
-statusDisplay.innerHTML = currentPlayerTurn();
-
-const winningConditions = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6],
-];
-
-function handleCellPlayed(clickedCell, clickedCellIndex) {
-  gameState[clickedCellIndex] = currentPlayer;
-  clickedCell.innerHTML = currentPlayer;
+  return this;
 }
 
-function handlePlayerChange() {
-  currentPlayer = currentPlayer === "X" ? "O" : "X";
-  statusDisplay.innerHTML = currentPlayerTurn();
-}
+TicTacToe.prototype.paint = function (grid_size) {
+  let self = this;
+  self.grid_size = grid_size;
+  let html = '<table id="tic-tac-toe" align="center">';
 
-function handleResultValidation() {
-  let roundWon = false;
-  for (let i = 0; i <= 7; i++) {
-    const winCondition = winningConditions[i];
-    let a = gameState[winCondition[0]];
-    let b = gameState[winCondition[1]];
-    let c = gameState[winCondition[2]];
-    if (a === "" || b === "" || c === "") {
-      continue;
+  for (let i = 0; i < grid_size; i++) {
+    html += "<tr>";
+    for (let j = 0; j < grid_size; j++) {
+      html += "<td></td>";
     }
-    if (a === b && b === c) {
-      roundWon = true;
-      break;
+    html += "</tr>";
+  }
+  html += "</table>";
+  self.placeholder.innerHTML = html;
+  self.columns = self.placeholder.getElementsByTagName("td");
+
+  for (let i = 0; i < this.columns.length; i++) {
+    self.columns[i].addEventListener("click", markHandler);
+  }
+
+  function markHandler(e) {
+    self.mark(e.target);
+  }
+};
+
+TicTacToe.prototype.mark = function (column) {
+  if (column.innerHTML) {
+    return;
+  }
+
+  this.marks.count++;
+  let current_mark = this.marks.count % 2 === 1 ? this.marks.X : this.marks.O;
+  column.innerHTML = current_mark;
+  column.classList.add(current_mark);
+
+  if (this.didWin(current_mark)) {
+    if (this.marks.count % 2 === 1) {
+      this.scores.X++;
+    } else {
+      this.scores.O++;
+    }
+    this.callback(current_mark, this.scores);
+  } else if (this.marks.count === this.columns.length) {
+    this.callback("draw");
+  }
+};
+
+TicTacToe.prototype.didWin = function (mark) {
+  let grid_size = this.grid_size;
+  let horizontal_count,
+    vertical_count,
+    right_to_left_count = 0,
+    left_to_right_count = 0;
+
+  for (let i = 0; i < grid_size; i++) {
+    horizontal_count = vertical_count = 0;
+    for (let j = 0; j < grid_size; j++) {
+      if (this.columns[i * grid_size + j].innerHTML == mark) {
+        horizontal_count++;
+      }
+      if (this.columns[j * grid_size + i].innerHTML == mark) {
+        vertical_count++;
+      }
+    }
+    if (horizontal_count == grid_size || vertical_count == grid_size) {
+      return true;
+    }
+    if (this.columns[i * grid_size + i].innerHTML == mark) {
+      right_to_left_count++;
+    }
+    if (this.columns[(grid_size - 1) * (i + 1)].innerHTML == mark) {
+      left_to_right_count++;
     }
   }
-
-  if (roundWon) {
-    statusDisplay.innerHTML = winningMessage();
-    gameActive = false;
-    return;
+  if (right_to_left_count == grid_size || left_to_right_count == grid_size) {
+    return true;
   }
+  return false;
+};
 
-  let roundDraw = !gameState.includes("");
-  if (roundDraw) {
-    statusDisplay.innerHTML = drawMessage();
-    gameActive = false;
-    return;
+TicTacToe.prototype.empty = function () {
+  for (let i = 0; i < this.columns.length; i++) {
+    this.columns[i].innerHTML = "";
+    this.columns[i].classList.remove(this.marks.X);
+    this.columns[i].classList.remove(this.marks.O);
   }
+  this.marks.count = 0;
+};
 
-  handlePlayerChange();
+TicTacToe.prototype.reset = function () {
+  this.empty();
+  this.scores = {
+    X: 0,
+    O: 0,
+  };
+};
+
+let placeholder = document.getElementById("placeholder");
+let tictactoe = new TicTacToe(placeholder, 3, onResult);
+
+function onResult(result, scores) {
+  if (result == "draw") {
+    alert("It's a draw !");
+  } else {
+    alert(result + " has won");
+    updateScores(scores.X, scores.O);
+  }
+  tictactoe.empty();
 }
 
-function handleCellClick(clickedCellEvent) {
-  const clickedCell = clickedCellEvent.target;
-  const clickedCellIndex = parseInt(
-    clickedCell.getAttribute("data-cell-index")
-  );
+function updateScores(X, O) {
+  document.querySelector("#scoreboard #player1").innerHTML = X;
+  document.querySelector("#scoreboard #player2").innerHTML = O;
+}
 
-  if (gameState[clickedCellIndex] !== "" || !gameActive) {
-    return;
+function restart(grid_size) {
+  tictactoe.reset();
+  updateScores(0, 0);
+  if (grid_size) {
+    tictactoe.paint(grid_size);
   }
-
-  handleCellPlayed(clickedCell, clickedCellIndex);
-  handleResultValidation();
 }
-
-function handleRestartGame() {
-  gameActive = true;
-  currentPlayer = "X";
-  gameState = ["", "", "", "", "", "", "", "", ""];
-  statusDisplay.innerHTML = currentPlayerTurn();
-  document.querySelectorAll(".cell").forEach((cell) => (cell.innerHTML = ""));
-}
-
-document
-  .querySelectorAll(".cell")
-  .forEach((cell) => cell.addEventListener("click", handleCellClick));
-document
-  .querySelector(".game--restart")
-  .addEventListener("click", handleRestartGame);

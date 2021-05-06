@@ -8,22 +8,30 @@
     <title>Tic-Tac-Toe Game</title>
   </head>
   <body>
-    <section>
-      <h1 class="game--title">Tic Tac Toe</h1>
-      <div class="game--container">
-        <div data-cell-index="0" class="cell"></div>
-        <div data-cell-index="1" class="cell"></div>
-        <div data-cell-index="2" class="cell"></div>
-        <div data-cell-index="3" class="cell"></div>
-        <div data-cell-index="4" class="cell"></div>
-        <div data-cell-index="5" class="cell"></div>
-        <div data-cell-index="6" class="cell"></div>
-        <div data-cell-index="7" class="cell"></div>
-        <div data-cell-index="8" class="cell"></div>
-      </div>
-      <h2 class="game--status"></h2>
-      <button class="game--restart">Restart Game</button>
-    </section>
+    <table id="scoreboard" align="center">
+      <tr>
+        <td>Player 1 🐶</td>
+        <td width="30">&nbsp;</td>
+        <td>Player 2 🐱</td>
+      </tr>
+      <tr>
+        <td class="score" id="player1">0</td>
+        <td>&nbsp;</td>
+        <td class="score" id="player2">0</td>
+      </tr>
+    </table>
+
+    <div id="placeholder"></div>
+
+    <button onclick="restart()">Reset</button>
+    <select onchange="restart(this.value)">
+      <option value="2">2 X 2</option>
+      <option value="3" selected="">3 X 3</option>
+      <option value="4">4 X 4</option>
+      <option value="5">5 X 5</option>
+      <option value="6">6 X 6</option>
+      <option value="9">9 X 9</option>
+    </select>
     <script src="js/index.js"></script>
   </body>
 </html>
